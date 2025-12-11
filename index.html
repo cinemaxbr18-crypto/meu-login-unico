@@ -32,12 +32,11 @@
         let auth;
 
         // ===============================================
-        // *** URL DO PORTAL DE LOGIN SSO ***
-        // Continua apontando para o nome completo do outro arquivo.
+        //  PONTO CRÍTICO: VERIFIQUE O CAMINHO EXATO DO SEU REPOSITÓRIO!
         // ===============================================
         const SSO_LOGIN_URL = "https://cinemaxbr18-crypto.github.io/Cartoes-Pesonalizados/sso_login_portal.html";
         
-        // A URL de callback é gerada automaticamente (agora será a URL raiz)
+        // A URL de callback deste próprio arquivo (agora index.html)
         const CALLBACK_URL = window.location.origin + window.location.pathname;
 
         function initializeConsumerSite() {
