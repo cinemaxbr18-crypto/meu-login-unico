@@ -7,13 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- FIREBASE SDK (Módulo) -->
+    <!-- Importação do SDK do Firebase (Módulo) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ===============================================
-        // *** CONFIGURAÇÃO DO FIREBASE (SUA CHAVE) ***
+        // *** CONFIGURAÇÃO DO FIREBASE (Projeto: meu-login-unico) ***
         // ===============================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
@@ -21,13 +21,15 @@
           projectId: "meu-login-unico",
           storageBucket: "meu-login-unico.firebasestorage.app",
           messagingSenderId: "855494840908",
-          appId: "1:855494840908:web:a322e0d5782f48d2389ae9",
+          appId: "1:855494840908:web:a322e0d5782f48d23899ae9",
           measurementId: "G-0Y5S5X0GHF"
         };
         // ===============================================
 
         function initializeSSOPortal() {
             let app, auth, provider;
+            
+            // Inicializa o Firebase
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -39,14 +41,17 @@
                 return; 
             }
             
+            // Pega os parâmetros da URL (redirect_to e app_name)
             const urlParams = new URLSearchParams(window.location.search);
             const redirectTo = urlParams.get('redirect_to'); 
             const appName = urlParams.get('app_name') || 'o aplicativo de origem';
 
+            // Atualiza a UI
             document.getElementById('app-name-display').textContent = appName;
             document.getElementById('loading-overlay').classList.add('hidden');
             document.getElementById('auth-content').classList.remove('hidden');
 
+            // Verifica se a URL de retorno está presente
             if (!redirectTo) {
                 document.getElementById('auth-content').innerHTML = `
                     <div class="p-8 text-center">
@@ -58,7 +63,9 @@
                 return; 
             }
 
+            // Função que inicia o Login com Google
             const handleGoogleLogin = () => {
+                // Desabilita o botão e mostra o carregamento
                 document.getElementById('btn-login-google').innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Autenticando...';
                 document.getElementById('btn-login-google').disabled = true;
 
@@ -66,13 +73,14 @@
                     .then((result) => {
                         const user = result.user;
                         
+                        // Obtém o token de identificação do Firebase
                         user.getIdToken().then(idToken => {
-                            // 3. Redirecionar para o site original, anexando o token
+                            // 3. Redireciona para o site original (Site Consumidor), anexando o token
                             const finalRedirectUrl = `${redirectTo}?token=${idToken}`;
                             
                             console.log("Login Sucedido! Redirecionando para:", finalRedirectUrl);
                             
-                            // *** PONTO DE REDIRECIONAMENTO FINAL ***
+                            // *** PONTO DE REDIRECIONAMENTO CRÍTICO ***
                             window.location.href = finalRedirectUrl; 
                             
                         }).catch(error => {
@@ -83,12 +91,12 @@
                     })
                     .catch((error) => {
                         console.error("Erro no login:", error);
-                        // Restaura o botão de login
                         document.getElementById('btn-login-google').innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Continuar com Google';
                         document.getElementById('btn-login-google').disabled = false;
                     });
             };
 
+            // Adiciona o listener de clique ao botão
             document.getElementById('btn-login-google').addEventListener('click', handleGoogleLogin);
             
             lucide.createIcons();
