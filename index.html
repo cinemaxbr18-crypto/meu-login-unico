@@ -17,7 +17,6 @@
 
         // ===============================================
         // *** CONFIGURAÇÃO DO FIREBASE (INSERIDA PELO USUÁRIO) ***
-        // É importante que seja a mesma do portal para a validação.
         // ===============================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
@@ -33,12 +32,12 @@
         let auth;
 
         // ===============================================
-        // *** PONTO CRÍTICO DO REDIRECIONAMENTO SSO ***
-        // SE HOUVER 404, CORRIJA O NOME DO ARQUIVO AQUI!
+        // *** URL DO PORTAL DE LOGIN SSO ***
+        // Continua apontando para o nome completo do outro arquivo.
         // ===============================================
         const SSO_LOGIN_URL = "https://cinemaxbr18-crypto.github.io/Cartoes-Pesonalizados/sso_login_portal.html";
         
-        // A URL de callback deste próprio arquivo
+        // A URL de callback é gerada automaticamente (agora será a URL raiz)
         const CALLBACK_URL = window.location.origin + window.location.pathname;
 
         function initializeConsumerSite() {
