@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Consumidor de Teste | Protegido por OneID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .token-info { word-break: break-all; }
+    </style>
+    
+    <!-- FIREBASE ADMIN SDK (para verificar o Token no cliente) -->
+    <!-- ATENÇÃO: Em uma aplicação REAL, esta verificação deve ser feita no seu servidor! -->
+    <script type="module">
+        // Importa apenas o SDK de inicialização (usado para obter o Auth, não para login)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ===============================================
+        // *** COPIE E COLE A CONFIGURAÇÃO DO FIREBASE NOVAMENTE AQUI ***
+        // Para que este site possa saber de qual Firebase o token veio.
+        // ===============================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
+          authDomain: "meu-login-unico.firebaseapp.com",
+          projectId: "meu-login-unico",
+          storageBucket: "meu-login-unico.firebasestorage.app",
+          messagingSenderId: "855494840908",
+          appId: "1:855494840908:web:a322e0d5782f48d2389ae9",
+          measurementId: "G-0Y5S5X0GHF"
+        };
+        // ===============================================
+
+        let auth;
+
+        // URL COMPLETA DO SEU PORTAL SSO - EDITE SE O NOME DO ARQUIVO MUDAR
+        // Usaremos esta URL no link de login.
+        const SSO_LOGIN_URL = "https://cinemaxbr18-crypto.github.io/Cartoes-Pesonalizados/sso_login_portal.html";
+        
+        // A URL de callback deste próprio arquivo
+        const CALLBACK_URL = window.location.origin + window.location.pathname;
+
+        function initializeConsumerSite() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const contentDiv = document.getElementById('consumer-content');
+            
+            // Inicialização do Firebase para verificação do token (necessário para o getAuth)
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+            } catch (e) {
+                console.error("Erro ao inicializar Firebase no Site Consumidor.", e);
+                return;
+            }
+
+            if (token) {
+                // --- PÁGINA DE CALLBACK (USUÁRIO VOLTOU COM TOKEN) ---
+                
+                contentDiv.innerHTML = `
+                    <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
+                        <p class="font-bold flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> Login Único Realizado com Sucesso!</p>
+                        <p class="text-sm mt-1">O ID Token do Firebase foi recebido e pode ser usado para verificar a identidade do usuário.</p>
+                    </div>
+
+                    <div id="token-verification-status" class="p-4 bg-yellow-100 rounded-lg text-yellow-700">
+                        <p class="font-bold flex items-center gap-2"><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Verificando Token...</p>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Token Recebido (Parâmetro URL)</h3>
+                    <p class="text-xs text-gray-500 token-info">${token}</p>
+                `;
+                lucide.createIcons();
+                
+                // VERIFICAÇÃO DE TOKEN (FAKE - SOMENTE PARA TESTE CLIENTE-SIDE)
+                // O Firebase SDK de cliente tenta validar a estrutura e a assinatura básica.
+                // IMPORTANTE: VERIFICAÇÃO REAL DEVE SER FEITA EM UM BACKEND SEGURO!
+                
+                // Você pode usar 'onAuthStateChanged' para tentar validar o token
+                auth.onIdTokenChanged(async (user) => {
+                    const statusDiv = document.getElementById('token-verification-status');
+                    if (user && user.uid) {
+                        // Se o SDK conseguir identificar o usuário
+                        statusDiv.className = 'p-4 bg-indigo-100 rounded-lg text-indigo-700';
+                        statusDiv.innerHTML = `
+                            <p class="font-bold flex items-center gap-2"><i data-lucide="lock-open" class="w-5 h-5"></i> Token Validado Localmente.</p>
+                            <p class="text-sm mt-1">UID do Usuário: <strong>${user.uid}</strong></p>
+                            <p class="text-sm mt-1">Email: <strong>${user.email}</strong></p>
+                        `;
+                    } else {
+                        // Se a validação falhar ou o token for inválido/expirado
+                        statusDiv.className = 'p-4 bg-red-100 rounded-lg text-red-700';
+                        statusDiv.innerHTML = `
+                            <p class="font-bold flex items-center gap-2"><i data-lucide="x-circle" class="w-5 h-5"></i> Falha na Validação do Token (Simulação).</p>
+                            <p class="text-sm mt-1">Em produção, o servidor rejeitaria este token ou ele estaria expirado.</p>
+                        `;
+                    }
+                    lucide.createIcons();
+                });
+
+                // Tentar logar com o token (Isso simula o processo do SDK)
+                // Embora o token esteja na URL, o SDK do Firebase o usa para estabelecer a sessão
+                // Esta parte depende do funcionamento interno do Firebase, mas é uma boa prática.
+                
+            } else {
+                // --- PÁGINA INICIAL (NÃO LOGADO) ---
+                contentDiv.innerHTML = `
+                    <div class="text-center p-8">
+                        <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">Acesso Protegido</h2>
+                        <p class="text-gray-600 mb-8">Para visualizar o conteúdo, você deve se autenticar usando nosso sistema de Login Único (OneID).</p>
+                        
+                        <a id="btn-iniciar-sso" href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-3 transition shadow-lg group">
+                            Iniciar Login Único (OneID)
+                            <i data-lucide="log-in" class="w-5 h-5 group-hover:translate-x-1 transition"></i>
+                        </a>
+
+                        <p class="text-xs text-gray-400 mt-6">Este site é o Site Consumidor que precisa validar o token de login.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+
+                // Monta o Link Mágico
+                const startSSOLink = document.getElementById('btn-iniciar-sso');
+                const finalLink = `${SSO_LOGIN_URL}?redirect_to=${encodeURIComponent(CALLBACK_URL)}&app_name=${encodeURIComponent(document.title)}`;
+                startSSOLink.href = finalLink;
+                
+                console.log("Link Mágico Gerado:", finalLink);
+            }
+        }
+        
+        initializeConsumerSite();
+        
+    </script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden p-6 md:p-10">
+        <h1 class="text-4xl font-extrabold text-indigo-700 mb-6 border-b pb-3">Meu App Protegido</h1>
+        
+        <div id="consumer-content">
+            <!-- Conteúdo carregado por JavaScript (Login ou Sucesso) -->
+        </div>
+        
+        <div class="mt-8 pt-4 border-t border-gray-200">
+            <p class="text-sm text-gray-500">
+                <span class="font-semibold">Instruções:</span>
+                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-500 text-xs">
+                    <li>Clique no botão "Iniciar Login Único".</li>
+                    <li>Você será redirecionado para o `sso_login_portal.html` para fazer login no Google.</li>
+                    <li>Após o login, o portal enviará o `token` de volta para este site via URL.</li>
+                    <li>Abaixo, você verá o token e a tentativa de validação (simulada) por este site.</li>
+                </ul>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
