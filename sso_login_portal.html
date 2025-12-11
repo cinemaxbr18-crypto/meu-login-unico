@@ -13,7 +13,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ===============================================
-        // *** CONFIGURAÇÃO DO FIREBASE (INSERIDA PELO USUÁRIO) ***
+        // *** CONFIGURAÇÃO DO FIREBASE (SUA CHAVE) ***
         // ===============================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
@@ -29,48 +29,36 @@
         function initializeSSOPortal() {
             let app, auth, provider;
             try {
-                // 1. Inicializa o Firebase
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 provider = new GoogleAuthProvider();
             } catch (e) {
-                console.error("ERRO FATAL: Falha ao inicializar o Firebase. Verifique firebaseConfig.", e);
+                console.error("ERRO FATAL: Falha ao inicializar o Firebase.", e);
                 document.getElementById('loading-message').textContent = "Erro: Falha na inicialização do Firebase.";
                 document.getElementById('loading-message').classList.add('text-red-500');
                 return; 
             }
             
-            // --- PARÂMETROS DE REDIRECIONAMENTO SSO ---
             const urlParams = new URLSearchParams(window.location.search);
-            
-            // O parâmetro 'redirect_to' é a URL de callback do site que iniciou o login.
             const redirectTo = urlParams.get('redirect_to'); 
             const appName = urlParams.get('app_name') || 'o aplicativo de origem';
 
-            // Atualiza a interface e esconde o loading
             document.getElementById('app-name-display').textContent = appName;
             document.getElementById('loading-overlay').classList.add('hidden');
             document.getElementById('auth-content').classList.remove('hidden');
 
-            // Verifica se a URL de retorno está presente
             if (!redirectTo) {
                 document.getElementById('auth-content').innerHTML = `
                     <div class="p-8 text-center">
                         <i data-lucide="alert-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-4"></i>
                         <h2 class="text-2xl font-bold text-gray-800 mb-2">URL de Retorno Ausente</h2>
-                        <p class="text-gray-500 text-sm">O link de login está incorreto. Falta o parâmetro <code>redirect_to</code>.</p>
-                        <p class="mt-4 text-xs text-gray-400">O site consumidor deve fornecer este link para que o login funcione.</p>
                     </div>
                 `;
                 lucide.createIcons();
                 return; 
             }
 
-            /**
-             * Realiza o login com Google e redireciona com o ID Token (O CERNE DO SSO).
-             */
             const handleGoogleLogin = () => {
-                // Feedback visual
                 document.getElementById('btn-login-google').innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Autenticando...';
                 document.getElementById('btn-login-google').disabled = true;
 
@@ -78,7 +66,6 @@
                     .then((result) => {
                         const user = result.user;
                         
-                        // 2. O passo crucial: Obter o ID Token do Firebase
                         user.getIdToken().then(idToken => {
                             // 3. Redirecionar para o site original, anexando o token
                             const finalRedirectUrl = `${redirectTo}?token=${idToken}`;
@@ -89,28 +76,19 @@
                             window.location.href = finalRedirectUrl; 
                             
                         }).catch(error => {
-                             // Falha ao gerar o token
                              console.error("Erro ao gerar token para redirecionamento:", error);
-                             // Restaura o botão em caso de erro
                              document.getElementById('btn-login-google').innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Continuar com Google';
                              document.getElementById('btn-login-google').disabled = false;
                         });
                     })
                     .catch((error) => {
-                        // Tratamento de erros de autenticação do Firebase
                         console.error("Erro no login:", error);
-                        if (error.code === 'auth/popup-closed-by-user') {
-                            // Tratar fechamento de pop-up
-                        } else if (error.code === 'auth/unauthorized-domain') {
-                            console.error("Domínio não autorizado. Adicione a URL deste portal nas Configurações do Firebase > Autenticação > Domínios Autorizados.");
-                        }
                         // Restaura o botão de login
                         document.getElementById('btn-login-google').innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Continuar com Google';
                         document.getElementById('btn-login-google').disabled = false;
                     });
             };
 
-            // Adiciona o evento de click ao botão
             document.getElementById('btn-login-google').addEventListener('click', handleGoogleLogin);
             
             lucide.createIcons();
@@ -143,12 +121,10 @@
             </div>
             
             <h2 class="text-2xl font-bold text-gray-800 mb-2">OneID | Login Único</h2>
-            <!-- Este texto exibe o nome do aplicativo de origem (app_name) -->
             <p class="text-gray-500 mb-6 text-sm">
                 Entre para acessar <strong id="app-name-display" class="text-indigo-600">o aplicativo de origem</strong>
             </p>
 
-            <!-- Botão de Login do Google (único método neste exemplo) -->
             <button id="btn-login-google" class="w-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition shadow-md group">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
                 Continuar com Google
