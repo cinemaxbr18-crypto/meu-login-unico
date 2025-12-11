@@ -10,13 +10,13 @@
         .token-info { word-break: break-all; }
     </style>
     
-    <!-- FIREBASE ADMIN SDK (para verificar o Token no cliente) -->
+    <!-- FIREBASE ADMIN SDK (para verificação de token) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ===============================================
-        // *** CONFIGURAÇÃO DO FIREBASE (INSERIDA PELO USUÁRIO) ***
+        // *** CONFIGURAÇÃO DO FIREBASE (SUA CHAVE) ***
         // ===============================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
@@ -32,7 +32,7 @@
         let auth;
 
         // ===============================================
-        //  PONTO CRÍTICO: VERIFIQUE O CAMINHO EXATO DO SEU REPOSITÓRIO!
+        //  PONTO CRÍTICO: ESTE DEVE SER O CAMINHO EXATO DO SEU REPOSITÓRIO E NOME DE ARQUIVO
         // ===============================================
         const SSO_LOGIN_URL = "https://cinemaxbr18-crypto.github.io/Cartoes-Pesonalizados/sso_login_portal.html";
         
@@ -44,7 +44,6 @@
             const token = urlParams.get('token');
             const contentDiv = document.getElementById('consumer-content');
             
-            // Inicialização do Firebase para verificação do token
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -54,24 +53,22 @@
             }
 
             if (token) {
-                // --- PÁGINA DE CALLBACK (USUÁRIO VOLTOU COM TOKEN) ---
-                
+                // --- USUÁRIO VOLTOU COM TOKEN ---
                 contentDiv.innerHTML = `
                     <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
                         <p class="font-bold flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> Login Único Realizado com Sucesso!</p>
-                        <p class="text-sm mt-1">O ID Token do Firebase foi recebido e pode ser usado para verificar a identidade do usuário.</p>
+                        <p class="text-sm mt-1">Token recebido e pronto para validação.</p>
                     </div>
 
                     <div id="token-verification-status" class="p-4 bg-yellow-100 rounded-lg text-yellow-700">
                         <p class="font-bold flex items-center gap-2"><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Verificando Token...</p>
                     </div>
 
-                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Token Recebido (Parâmetro URL)</h3>
+                    <h3 class="text-xl font-semibold mt-6 mb-2 text-gray-700">Token Recebido</h3>
                     <p class="text-xs text-gray-500 token-info">${token}</p>
                 `;
                 lucide.createIcons();
                 
-                // Tenta validar o token localmente usando o SDK do Firebase
                 auth.onIdTokenChanged(async (user) => {
                     const statusDiv = document.getElementById('token-verification-status');
                     if (user && user.uid) {
@@ -87,7 +84,6 @@
                         statusDiv.className = 'p-4 bg-red-100 rounded-lg text-red-700';
                         statusDiv.innerHTML = `
                             <p class="font-bold flex items-center gap-2"><i data-lucide="x-circle" class="w-5 h-5"></i> Falha na Validação do Token (Simulação).</p>
-                            <p class="text-sm mt-1">O SDK não conseguiu validar o usuário a partir do token.</p>
                         `;
                     }
                     lucide.createIcons();
@@ -105,13 +101,11 @@
                             Iniciar Login Único (OneID)
                             <i data-lucide="log-in" class="w-5 h-5 group-hover:translate-x-1 transition"></i>
                         </a>
-
-                        <p class="text-xs text-gray-400 mt-6">Este site é o Site Consumidor que precisa validar o token de login.</p>
                     </div>
                 `;
                 lucide.createIcons();
 
-                // Monta o Link Mágico
+                // Monta o Link Mágico (inicia o SSO)
                 const startSSOLink = document.getElementById('btn-iniciar-sso');
                 const finalLink = `${SSO_LOGIN_URL}?redirect_to=${encodeURIComponent(CALLBACK_URL)}&app_name=${encodeURIComponent(document.title)}`;
                 startSSOLink.href = finalLink;
@@ -127,21 +121,11 @@
 <body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden p-6 md:p-10">
         <h1 class="text-4xl font-extrabold text-indigo-700 mb-6 border-b pb-3">Meu App Protegido</h1>
-        
         <div id="consumer-content">
-            <!-- Conteúdo carregado por JavaScript (Login ou Sucesso) -->
+            <!-- Conteúdo dinâmico -->
         </div>
-        
         <div class="mt-8 pt-4 border-t border-gray-200">
-            <p class="text-sm text-gray-500">
-                <span class="font-semibold">Instruções:</span>
-                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-500 text-xs">
-                    <li>Clique no botão "Iniciar Login Único".</li>
-                    <li>Você será redirecionado para o `sso_login_portal.html` para fazer login no Google.</li>
-                    <li>Após o login, o portal enviará o `token` de volta para este site via URL.</li>
-                    <li>Abaixo, você verá o token e a tentativa de validação (simulada) por este site.</li>
-                </ul>
-            </p>
+            <p class="text-sm text-gray-500">Teste SSO: O App Protegido (index.html) redireciona para o Portal (sso_login_portal.html) e espera o token de volta.</p>
         </div>
     </div>
 </body>
