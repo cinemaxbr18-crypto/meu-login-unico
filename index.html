@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OneID | Acesso Único</title>
+    <title>OneID | Login Único</title>
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
@@ -18,7 +15,7 @@
 </head>
 <body class="bg-slate-900 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Overlay carregamento -->
+    <!-- Overlay -->
     <div id="loading-overlay" class="absolute inset-0 bg-slate-900 flex items-center justify-center z-50">
         <div class="text-center text-white">
             <i data-lucide="loader-2" class="w-10 h-10 mx-auto mb-3 animate-spin text-indigo-400"></i>
@@ -26,53 +23,39 @@
         </div>
     </div>
 
-    <!-- Box Principal -->
+    <!-- Conteúdo principal -->
     <div id="auth-content" class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden hidden">
         <div class="p-8 text-center">
-            
+
             <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <i data-lucide="key-round" class="w-8 h-8"></i>
             </div>
 
             <h2 class="text-2xl font-bold text-gray-800 mb-2">OneID | Login Único</h2>
-
             <p class="text-gray-500 mb-6 text-sm">
-                Entre para acessar <strong id="app-name-display" class="text-indigo-600">o aplicativo de origem</strong>
+                Entre para acessar <strong id="app-name-display" class="text-indigo-600"></strong>
             </p>
 
             <button id="btn-login-google" class="w-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 transition shadow-md">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
                 Continuar com Google
             </button>
-
         </div>
 
-        <div class="bg-slate-50 p-4 border-t border-gray-100 text-center">
+        <div class="bg-slate-50 p-4 text-center border-t border-gray-100">
             <p class="text-xs text-gray-400 flex items-center justify-center gap-1">
-                <i data-lucide="lock" class="w-3 h-3"></i> O seu acesso é processado com segurança via Firebase.
+                <i data-lucide="lock" class="w-3 h-3"></i> Seu acesso é seguro via Firebase.
             </p>
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!--  FIREBASE - MÓDULO COMPLETO (SSO + ANALYTICS) -->
-    <!-- ========================================== -->
+    <!-- FIREBASE SCRIPT (modular) -->
     <script type="module">
-
-        /* ================================
-           IMPORTS DO FIREBASE (CDN OFICIAL)
-        ==================================*/
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-        import { 
-            getAuth, 
-            signInWithPopup, 
-            GoogleAuthProvider 
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        /* =============================
-           CONFIG FIREBASE (O SEU)
-        ==============================*/
+        // Configuração Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
             authDomain: "meu-login-unico.firebaseapp.com",
@@ -83,66 +66,62 @@
             measurementId: "G-0Y5S5X0GHF"
         };
 
-        /* Inicialização */
+        // Inicializa Firebase + Analytics
         const app = initializeApp(firebaseConfig);
-
-        // Analytics funciona no GitHub Pages
-        const analytics = getAnalytics(app);
+        getAnalytics(app);
 
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        /* ===========================================
-            PARÂMETROS DE REDIRECIONAMENTO DO SSO
-        ============================================*/
-        const params = new URLSearchParams(window.location.search);
-        const redirectTo = params.get("redirect_to");
-        const appName   = params.get("app_name") || "o aplicativo de origem";
+        // PARÂMETROS DA URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTo = urlParams.get("redirect_to");
+        const appName = urlParams.get("app_name") || "o aplicativo de origem";
 
+        // Atualiza texto na tela
         document.getElementById("app-name-display").textContent = appName;
 
-        // Exibe conteúdo
+        // Mostra conteúdo, esconde loading
         document.getElementById("loading-overlay").classList.add("hidden");
         document.getElementById("auth-content").classList.remove("hidden");
 
+        // 👉 Não tem redirect?
         if (!redirectTo) {
-            document.getElementById("auth-content").innerHTML = `
-                <div class="p-8 text-center">
-                    <i data-lucide="alert-triangle" class="w-12 h-12 text-yellow-500 mx-auto mb-4"></i>
-                    <h2 class="text-2xl font-bold mb-2">URL de Retorno Ausente</h2>
-                    <p class="text-gray-500 text-sm">O site que te enviou não informou a URL de retorno.</p>
+            document.getElementById("auth-content").innerHTML =
+                `<div class="p-8 text-center">
+                    <h2 class="text-xl font-bold text-red-600 mb-2">Erro: redirect_to ausente</h2>
+                    <p class="text-gray-600">A URL precisa conter <code>?redirect_to=SUA_URL</code></p>
                 </div>`;
             lucide.createIcons();
             return;
         }
 
-        /* ===========================================
-            LOGIN COM GOOGLE (POPPER + TOKEN SSO)
-        ============================================*/
-        document.getElementById("btn-login-google").onclick = () => {
-
+        // LOGIN COM GOOGLE
+        document.getElementById("btn-login-google").addEventListener("click", async () => {
             const btn = document.getElementById("btn-login-google");
             btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Autenticando...`;
+            btn.disabled = true;
 
-            signInWithPopup(auth, provider)
-                .then(result => {
-                    const user = result.user;
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
 
-                    user.getIdToken().then(token => {
-                        const finalUrl = `${redirectTo}?token=${token}`;
-                        window.location.href = finalUrl;
-                    });
-                })
-                .catch(err => {
-                    alert("Erro no login: " + err.message);
-                    btn.innerHTML = `
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
-                        Continuar com Google`;
-                });
-        };
+                const idToken = await user.getIdToken();
 
+                window.location.href = `${redirectTo}?token=${idToken}`;
+
+            } catch (error) {
+                alert("Erro ao autenticar: " + error.message);
+                btn.innerHTML = `<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"> Continuar com Google`;
+                btn.disabled = false;
+            }
+
+            lucide.createIcons();
+        });
+    </script>
+
+    <script>
         lucide.createIcons();
-
     </script>
 
 </body>
