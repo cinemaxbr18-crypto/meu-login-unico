@@ -11,15 +11,13 @@
     </style>
     
     <!-- FIREBASE ADMIN SDK (para verificar o Token no cliente) -->
-    <!-- ATENÇÃO: Em uma aplicação REAL, esta verificação deve ser feita no seu servidor! -->
     <script type="module">
-        // Importa apenas o SDK de inicialização (usado para obter o Auth, não para login)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         // ===============================================
-        // *** COPIE E COLE A CONFIGURAÇÃO DO FIREBASE NOVAMENTE AQUI ***
-        // Para que este site possa saber de qual Firebase o token veio.
+        // *** CONFIGURAÇÃO DO FIREBASE (INSERIDA PELO USUÁRIO) ***
+        // É importante que seja a mesma do portal para a validação.
         // ===============================================
         const firebaseConfig = {
           apiKey: "AIzaSyDZFjQf35AoueYxVAhnm7cl8FogUx1tQ6g",
@@ -34,8 +32,10 @@
 
         let auth;
 
-        // URL COMPLETA DO SEU PORTAL SSO - EDITE SE O NOME DO ARQUIVO MUDAR
-        // Usaremos esta URL no link de login.
+        // ===============================================
+        // *** PONTO CRÍTICO DO REDIRECIONAMENTO SSO ***
+        // SE HOUVER 404, CORRIJA O NOME DO ARQUIVO AQUI!
+        // ===============================================
         const SSO_LOGIN_URL = "https://cinemaxbr18-crypto.github.io/Cartoes-Pesonalizados/sso_login_portal.html";
         
         // A URL de callback deste próprio arquivo
@@ -46,7 +46,7 @@
             const token = urlParams.get('token');
             const contentDiv = document.getElementById('consumer-content');
             
-            // Inicialização do Firebase para verificação do token (necessário para o getAuth)
+            // Inicialização do Firebase para verificação do token
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -73,15 +73,11 @@
                 `;
                 lucide.createIcons();
                 
-                // VERIFICAÇÃO DE TOKEN (FAKE - SOMENTE PARA TESTE CLIENTE-SIDE)
-                // O Firebase SDK de cliente tenta validar a estrutura e a assinatura básica.
-                // IMPORTANTE: VERIFICAÇÃO REAL DEVE SER FEITA EM UM BACKEND SEGURO!
-                
-                // Você pode usar 'onAuthStateChanged' para tentar validar o token
+                // Tenta validar o token localmente usando o SDK do Firebase
                 auth.onIdTokenChanged(async (user) => {
                     const statusDiv = document.getElementById('token-verification-status');
                     if (user && user.uid) {
-                        // Se o SDK conseguir identificar o usuário
+                        // Token validado com sucesso
                         statusDiv.className = 'p-4 bg-indigo-100 rounded-lg text-indigo-700';
                         statusDiv.innerHTML = `
                             <p class="font-bold flex items-center gap-2"><i data-lucide="lock-open" class="w-5 h-5"></i> Token Validado Localmente.</p>
@@ -89,22 +85,18 @@
                             <p class="text-sm mt-1">Email: <strong>${user.email}</strong></p>
                         `;
                     } else {
-                        // Se a validação falhar ou o token for inválido/expirado
+                        // Falha na validação ou token ausente
                         statusDiv.className = 'p-4 bg-red-100 rounded-lg text-red-700';
                         statusDiv.innerHTML = `
                             <p class="font-bold flex items-center gap-2"><i data-lucide="x-circle" class="w-5 h-5"></i> Falha na Validação do Token (Simulação).</p>
-                            <p class="text-sm mt-1">Em produção, o servidor rejeitaria este token ou ele estaria expirado.</p>
+                            <p class="text-sm mt-1">O SDK não conseguiu validar o usuário a partir do token.</p>
                         `;
                     }
                     lucide.createIcons();
                 });
-
-                // Tentar logar com o token (Isso simula o processo do SDK)
-                // Embora o token esteja na URL, o SDK do Firebase o usa para estabelecer a sessão
-                // Esta parte depende do funcionamento interno do Firebase, mas é uma boa prática.
                 
             } else {
-                // --- PÁGINA INICIAL (NÃO LOGADO) ---
+                // --- PÁGINA INICIAL (Não Logado) ---
                 contentDiv.innerHTML = `
                     <div class="text-center p-8">
                         <i data-lucide="shield-alert" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
